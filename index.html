@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Kompres Gambar dalam ZIP</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      transition: transform 0.3s ease;
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .drop-zone {
+      border: 2px dashed #007bff;
+      border-radius: 12px;
+      padding: 40px;
+      cursor: pointer;
+      transition: background 0.3s, border-color 0.3s;
+      color: #555;
+    }
+
+    .drop-zone.dragover {
+      background-color: #eaf4ff;
+      border-color: #0056b3;
+    }
+
+    .drop-zone input {
+      display: none;
+    }
+
+    select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      transition: all 0.3s ease;
+    }
+
+    select:focus, button:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      font-weight: bold;
+      border: none;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    #progressBarContainer {
+      width: 100%;
+      background: #e0e0e0;
+      border-radius: 10px;
+      margin-top: 20px;
+      overflow: hidden;
+      display: none;
+    }
+
+    #progressBar {
+      height: 16px;
+      width: 0%;
+      background: #28a745;
+      transition: width 0.3s ease;
+    }
+
+    #status {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📦 Kompres Gambar dalam ZIP</h2>
+
+    <div class="drop-zone" id="dropZone">
+      <p>Tarik & letakkan file ZIP di sini<br>atau klik untuk memilih</p>
+      <input type="file" id="zipInput" accept=".zip">
+    </div>
+
+    <select id="quality">
+      <option value="0.25">Kecil (Hemat ukuran)</option>
+      <option value="0.5" selected>Sedang (Seimbang)</option>
+      <option value="0.75">Tinggi (Kualitas terbaik)</option>
+    </select>
+
+    <button id="processBtn">🚀 Kompres & Download ZIP</button>
+
+    <div id="progressBarContainer">
+      <div id="progressBar"></div>
+    </div>
+
+    <div id="status"></div>
+  </div>
+
+  <!-- JSZip CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- Pica CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pica/8.0.0/pica.min.js"></script>
+
+  <script>
+    const zipInput = document.getElementById('zipInput');
+    const dropZone = document.getElementById('dropZone');
+    const processBtn = document.getElementById('processBtn');
+    const progressBar = document.getElementById('progressBar');
+    const progressBarContainer = document.getElementById('progressBarContainer');
+    const status = document.getElementById('status');
+    const qualitySelect = document.getElementById('quality');
+
+    let zipFile = null;
+
+    // DRAG & DROP
+    dropZone.addEventListener('click', () => zipInput.click());
+
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length && files[0].type === 'application/zip') {
+        zipFile = files[0];
+        dropZone.innerHTML = `<p>✅ File dipilih: ${zipFile.name}</p>`;
+      } else {
+        alert('Mohon masukkan file ZIP!');
+      }
+    });
+
+    zipInput.addEventListener('change', e => {
+      if (zipInput.files.length) {
+        zipFile = zipInput.files[0];
+        dropZone.innerHTML = `<p>✅ File dipilih: ${zipFile.name}</p>`;
+      }
+    });
+
+    processBtn.addEventListener('click', async () => {
+      if (!zipFile) {
+        alert("Silakan upload file ZIP terlebih dahulu.");
+        return;
+      }
+
+      const scale = parseFloat(qualitySelect.value);
+      processBtn.disabled = true;
+      status.textContent = "⏳ Memproses file ZIP...";
+      progressBarContainer.style.display = "block";
+      progressBar.style.width = "0%";
+
+      const zip = await JSZip.loadAsync(zipFile);
+      const newZip = new JSZip();
+      const entries = Object.keys(zip.files);
+      let processed = 0;
+
+      for (const path of entries) {
+        const entry = zip.files[path];
+
+        if (entry.dir) {
+          newZip.folder(path);
+        } else if (/\.(jpe?g|png)$/i.test(path)) {
+          const blob = await entry.async("blob");
+          const imgBitmap = await createImageBitmap(blob);
+          const canvas = document.createElement("canvas");
+
+          canvas.width = imgBitmap.width * scale;
+          canvas.height = imgBitmap.height * scale;
+
+          await pica().resize(imgBitmap, canvas);
+          const compressedBlob = await new Promise(resolve =>
+            canvas.toBlob(resolve, "image/jpeg", 0.8)
+          );
+
+          newZip.file(path, compressedBlob);
+        } else {
+          const blob = await entry.async("blob");
+          newZip.file(path, blob);
+        }
+
+        processed++;
+        const percent = Math.round((processed / entries.length) * 100);
+        progressBar.style.width = `${percent}%`;
+        status.textContent = `📦 Memproses ${processed}/${entries.length} file... (${percent}%)`;
+      }
+
+      status.textContent = "📁 Membuat file ZIP hasil...";
+      const result = await newZip.generateAsync({ type: "blob" });
+
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(result);
+      a.download = "compressed.zip";
+      a.click();
+
+      status.textContent = "✅ Kompres selesai! ZIP telah diunduh.";
+      progressBar.style.width = `100%`;
+      processBtn.disabled = false;
+    });
+  </script>
+</body>
+</html>

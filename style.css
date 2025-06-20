@@ -1,0 +1,125 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f4f7f6;
+    margin: 0;
+}
+
+.container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+p {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.upload-area {
+    margin-bottom: 25px;
+    border: 2px dashed #a8a8a8;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.upload-button {
+    background-color: #007bff;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    display: inline-block;
+    margin-bottom: 15px;
+}
+
+.upload-button:hover {
+    background-color: #0056b3;
+}
+
+.file-name {
+    color: #555;
+    font-style: italic;
+}
+
+.compress-button {
+    background-color: #28a745;
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    box-sizing: border-box; /* Ensures padding doesn't increase width beyond 100% */
+}
+
+.compress-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.compress-button:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.status-message {
+    margin-top: 25px;
+    padding: 15px;
+    border-radius: 5px;
+    font-weight: bold;
+    color: #333;
+    min-height: 20px; /* Reserve space */
+}
+
+.status-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.download-area {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.download-link {
+    background-color: #007bff;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 16px;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+}
+
+.download-link:hover {
+    background-color: #0056b3;
+}
